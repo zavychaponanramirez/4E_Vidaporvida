@@ -10,10 +10,23 @@ const Disciple = require('./models/Disciple');
 const app = express();
 
 // Middlewares
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://tu-frontend-en-render.com' // ← URL de Jhanire en Render
+];
+
 app.use(cors({
-   origin: true,
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Origen no permitido por CORS'));
+    }
+  },
   credentials: true
 }));
+
+
 app.use(express.json());
 
 // Conexión a MongoDB CON MEJOR DIAGNÓSTICO
@@ -22,7 +35,6 @@ console.log('🔗 Intentando conectar a MongoDB...');
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/iglesia-4e', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-  serverSelectionTimeoutMS: 10000,
 })
 .then(() => {
   console.log('✅ Conectado a MongoDB Atlas!');
