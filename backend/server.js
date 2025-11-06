@@ -11,7 +11,7 @@ const app = express();
 
 // Middlewares
 app.use(cors({
-   origin: ['http://localhost:5173', 'http://192.168.1.8:5173'],
+   origin: true,
   credentials: true
 }));
 app.use(express.json());
@@ -110,7 +110,8 @@ app.get('/api/debug-env', (req, res) => {
 
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🎯 Servidor backend corriendo en puerto ${PORT}`);
-  console.log(`🌐 Health check: http://localhost:${PORT}/api/health`);
+  console.log(`🌐 Health check (TU PC): http://localhost:${PORT}/api/health`);
+  console.log(`🌐 Health check (JHANIRE): http://192.168.56.1:${PORT}/api/health`);
 });
