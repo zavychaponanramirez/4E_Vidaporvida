@@ -1,4 +1,4 @@
-﻿import axios from "axios";
+import axios from "axios";
 
 const API_BASE_URL = "http://localhost:5000/api";
 
@@ -9,19 +9,19 @@ export const api = axios.create({
   },
 });
 
-// Interceptor para debug
+// Interceptor para debug (sin emojis)
 api.interceptors.request.use((config) => {
-  console.log(`🔄 Haciendo request a: ${config.url}`);
+  console.log("Haciendo request a:", config.url);
   return config;
 });
 
 api.interceptors.response.use(
   (response) => {
-    console.log("✅ Respuesta recibida:", response.status);
+    console.log("Respuesta recibida:", response.status);
     return response;
   },
   (error) => {
-    console.error("❌ Error de API:", error);
+    console.error("Error de API:", error);
     return Promise.reject(error);
   }
 );
