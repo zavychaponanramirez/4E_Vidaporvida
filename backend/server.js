@@ -125,5 +125,5 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🎯 Servidor backend corriendo en puerto ${PORT}`);
   console.log(`🌐 Health check (TU PC): http://localhost:${PORT}/api/health`);
-  console.log(`🌐 Health check (JHANIRE): http://192.168.56.1:${PORT}/api/health`);
+  
 });
