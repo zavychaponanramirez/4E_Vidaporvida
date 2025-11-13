@@ -1,14 +1,19 @@
 {
   "name": "backend-4e",
   "version": "1.0.0",
-  "description": "Backend para sistema de discipulado 4E",
+  "description": "Backend para sistema 4E Vida por Vida",
   "main": "server.js",
+  "type": "commonjs",
   "scripts": {
-    "start": "node server.js",
     "dev": "nodemon server.js",
+    "start": "node server.js"
   },
-  "keywords": ["iglesia", "discipulado", "4e"],
-  "author": "Zavy & Jhani",
+  "keywords": [
+    "iglesia",
+    "discipulado",
+    "4e"
+  ],
+  "author": "Zavy",
   "license": "MIT",
   "dependencies": {
     "express": "^4.18.2",
@@ -18,7 +23,7 @@
     "bcryptjs": "^2.4.3",
     "jsonwebtoken": "^9.0.0"
   },
-  "engines": {
-    "node": ">=18.0.0"
+  "devDependencies": {
+    "nodemon": "^2.0.22"
   }
 }
