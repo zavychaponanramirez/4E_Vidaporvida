@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -43,7 +44,28 @@ const userSchema = new mongoose.Schema({
 }, {
   timestamps: true // Crea createdAt y updatedAt automáticamente
 });
+//Aqui agregue lo necesario para bcrypt para guardar la contraseña y para comparar.
 
+// HASH PASSWORD ANTES DE GUARDAR
+userSchema.pre('save', async function(next) {
+  // Solo hashear si el password fue modificado
+  if (!this.isModified('password')) return next();
+  
+  try {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
+
+// MÉTODO PARA COMPARAR PASSWORDS
+userSchema.methods.comparePassword = async function(candidatePassword) {
+  return await bcrypt.compare(candidatePassword, this.password);
+};
+
+//Lo de abajo es necesario revisar antes de editar.
 // Método para devolver datos públicos del usuario (sin password)
 userSchema.methods.toJSON = function() {
   const user = this.toObject();

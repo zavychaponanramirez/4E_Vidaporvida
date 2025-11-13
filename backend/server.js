@@ -12,22 +12,25 @@ const app = express();
 // Middlewares
 const allowedOrigins = [
   'http://localhost:5173',
-  'https://tu-frontend-en-render.com' // ← URL de Jhanire en Render
+  'https://192.168.1.8:5173' // ← IP de Jhanire en la red local
 ];
 
 app.use(cors({
-  origin: function (origin, callback) {
+  /*origin: function (origin, callback) {
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Origen no permitido por CORS'));
     }
-  },
+  },*/
+  origin: true,
   credentials: true
 }));
 
 
 app.use(express.json());
+//Agrego y uso las rutas de auth
+app.use('/api/auth', require('./routes/authRoutes'));
 
 // Conexión a MongoDB CON MEJOR DIAGNÓSTICO
 console.log('🔗 Intentando conectar a MongoDB...');
