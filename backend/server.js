@@ -3,41 +3,60 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
 
-// Importar modelos (agregar estas líneas)
+
+//...........................................
+// CONVERTIR URI DE MONGODB+SRV A MONGODB://
+if (process.env.MONGODB_URI && process.env.MONGODB_URI.includes('mongodb+srv://')) {
+  console.log('🔧 Convirtiendo mongodb+srv:// a conexión estándar...');
+  
+  // Extraer partes de la URI
+  const uri = process.env.MONGODB_URI;
+  const match = uri.match(/mongodb\+srv:\/\/([^:]+):([^@]+)@([^\/]+)\/([^?]+)(\?.+)?/);
+  
+  if (match) {
+    const [_, username, password, host, database, query] = match;
+    
+    // Crear URI estándar con puertos explícitos
+    const standardURI = `mongodb://${username}:${password}@${host}:27017/${database}${query || ''}`;
+    
+    console.log('📡 URI convertida:', standardURI.replace(/:([^:]+)@/, ':****@'));
+    process.env.MONGODB_URI = standardURI;
+  }
+}
+
+
+///////.............................................
+
+// Importar modelos
 const User = require('./models/User');
 const Disciple = require('./models/Disciple');
 
+// 🔧 SOLUCIÓN DNS PARA WINDOWS
+const dns = require('dns');
+dns.setDefaultResultOrder('ipv4first');
+
 const app = express();
 
-// Middlewares
-const allowedOrigins = [
-  'http://localhost:5173',
-  'https://192.168.1.8:5173' // ← IP de Jhanire en la red local
-];
-
+// Middlewares - CORS permisivo para desarrollo
 app.use(cors({
-  /*origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Origen no permitido por CORS'));
-    }
-  },*/
   origin: true,
   credentials: true
 }));
 
-
 app.use(express.json());
-//Agrego y uso las rutas de auth
-app.use('/api/auth', require('./routes/authRoutes'));
 
-// Conexión a MongoDB CON MEJOR DIAGNÓSTICO
-console.log('🔗 Intentando conectar a MongoDB...');
+// 📍 RUTAS DE AUTENTICACIÓN
+app.use('/api/auth', require('./routes/auth')); // ← CORREGIDO
 
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/iglesia-4e', {
+// CONEXIÓN MONGODB
+console.log('🔗 Conectando a MongoDB Atlas...');
+
+mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 30000,
+  socketTimeoutMS: 45000,
+  maxPoolSize: 10,
 })
 .then(() => {
   console.log('✅ Conectado a MongoDB Atlas!');
@@ -45,11 +64,10 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/iglesia-4
   console.log('🏠 Host:', mongoose.connection.host);
 })
 .catch(err => {
-  console.log('❌ ERROR conectando a MongoDB:');
+  console.log('❌ Error MongoDB:');
   console.log('   - Mensaje:', err.message);
   console.log('   - Código:', err.code);
   
-  // Diagnóstico específico para tu caso
   if (err.message.includes('auth') || err.message.includes('authentication')) {
     console.log('🔐 PROBLEMA: Error de autenticación');
     console.log('💡 SOLUCIÓN: Verifica:');
@@ -57,36 +75,42 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/iglesia-4
     console.log('   2. Carácter "!" debe ser "%21" en la URL');
     console.log('   3. Usuario tiene permisos en MongoDB Atlas');
   }
+});  // ← CIERRE CORRECTO
+
+// Ruta de salud simplificada
+app.get('/api/health', (req, res) => {
+  const dbStatus = mongoose.connection.readyState;
+  const statusMap = {
+    0: 'disconnected',
+    1: 'connected',
+    2: 'connecting',
+    3: 'disconnecting'
+  };
+  
+  res.json({ 
+    message: '🚀 Backend 4E funcionando!', 
+    timestamp: new Date(),
+    server: 'Express.js',
+    port: process.env.PORT,
+    database: {
+      status: statusMap[dbStatus],
+      readyState: dbStatus,
+      name: mongoose.connection.name || 'connecting...'
+    }
+  });
 });
 
-// Ruta de prueba MEJORADA
-app.get('/api/health', async (req, res) => {
-  try {
-    // Contar documentos en cada colección para verificar modelos
-    const usersCount = await User.countDocuments();
-    const disciplesCount = await Disciple.countDocuments();
-    
-    res.json({ 
-      message: '🚀 Backend 4E funcionando!', 
-      timestamp: new Date(),
-      database: {
-        status: 'Connected',
-        name: mongoose.connection.name,
-        collections: {
-          users: usersCount,
-          disciples: disciplesCount
-        }
-      }
-    });
-  } catch (error) {
-    res.status(500).json({
-      message: 'Error verificando base de datos',
-      error: error.message
-    });
-  }
+// Ruta de ping (sin MongoDB)
+app.get('/api/ping', (req, res) => {
+  res.json({
+    message: '✅ Backend funcionando',
+    timestamp: new Date(),
+    server: 'Express.js 4E',
+    status: 'OK'
+  });
 });
 
-// NUEVA RUTA: Crear usuario de prueba (eliminar después)
+// Ruta de prueba para crear usuario
 app.post('/api/test-user', async (req, res) => {
   try {
     const testUser = new User({
@@ -108,9 +132,8 @@ app.post('/api/test-user', async (req, res) => {
   }
 });
 
-// Ruta adicional para diagnóstico (OPCIONAL)
+// Ruta para diagnóstico
 app.get('/api/debug-env', (req, res) => {
-  // Mostrar info segura (sin password completa)
   const safeMongoURI = process.env.MONGODB_URI 
     ? process.env.MONGODB_URI.replace(/:([^@]+)@/, ':****@')
     : 'No configurada';
@@ -123,10 +146,11 @@ app.get('/api/debug-env', (req, res) => {
   });
 });
 
-
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🎯 Servidor backend corriendo en puerto ${PORT}`);
-  console.log(`🌐 Health check (TU PC): http://localhost:${PORT}/api/health`);
-  
+  console.log(`🎯 Servidor backend en puerto ${PORT}`);
+  console.log(`🌐 Health: http://localhost:${PORT}/api/health`);
+  console.log(`📡 Ping: http://localhost:${PORT}/api/ping`);
+  console.log(`🔐 Auth: http://localhost:${PORT}/api/auth`);
+  console.log(`🐞 Debug: http://localhost:${PORT}/api/debug-env`);
 });

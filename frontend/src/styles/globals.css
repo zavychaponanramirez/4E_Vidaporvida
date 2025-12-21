@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 🎨 ESTILOS BASE PERSONALIZADOS */
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  body {
+    @apply bg-4e-light text-4e-dark;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold text-4e-dark;
+  }
+}
+
+/* 🧩 COMPONENTES REUTILIZABLES */
+@layer components {
+  .btn-4e {
+    @apply px-4 py-2.5 rounded-4e font-semibold transition-all duration-300 
+           disabled:opacity-50 disabled:cursor-not-allowed
+           focus:outline-none focus:ring-2 focus:ring-offset-2
+           flex items-center gap-2;
+  }
+  
+  .btn-4e-primary {
+    @apply btn-4e bg-4e-primary text-white 
+           hover:bg-4e-primary-light 
+           focus:ring-4e-primary;
+  }
+  
+  .btn-4e-secondary {
+    @apply btn-4e bg-4e-purple text-white 
+           hover:bg-4e-purple-light
+           focus:ring-4e-purple;
+  }
+  
+  .btn-4e-outline {
+    @apply btn-4e border-2 border-4e-primary text-4e-primary
+           hover:bg-4e-primary hover:text-white
+           focus:ring-4e-primary;
+  }
+  
+  .card-4e {
+    @apply bg-white rounded-4e shadow-4e p-6 border border-gray-100;
+  }
+  
+  .card-4e-primary {
+    @apply card-4e border-l-4 border-l-4e-primary;
+  }
+  
+  .card-4e-purple {
+    @apply card-4e border-l-4 border-l-4e-purple;
+  }
+}
